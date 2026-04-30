@@ -1,6 +1,8 @@
 # Node modules
 backend/node_modules/
 frontend/node_modules/
+# Dependencies
+node_modules/
 
 # Logs
 logs
@@ -10,14 +12,18 @@ yarn-debug.log*
 yarn-error.log*
 
 # dotenv environment variables
+# Environment variables
 .env
 backend/.env
 frontend/.env
 
 # Build outputs
 frontend/dist/
+dist/
+build/
 
 # Uploads
+# Uploaded files (from backend)
 backend/uploads/
 
 # OS files
