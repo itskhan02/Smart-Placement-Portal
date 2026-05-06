@@ -1,7 +1,7 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Groq = require("groq-sdk");
 
-// Initialize AI clients (only if API keys are configured)
+// Initialize AI clients
 const genAI = process.env.GEMINI_API_KEY
   ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY)
   : null;
@@ -10,7 +10,7 @@ const groq = process.env.GROQ_API_KEY
   ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null;
 
-// Available models (ordered by preference)
+// Available models 
 const GEMINI_MODELS = [
   "gemini-1.5-flash-001",
   "gemini-1.5-pro-001",
@@ -28,7 +28,7 @@ const GROQ_MODELS = [
 // Track which provider worked last time (for faster subsequent calls)
 let lastSuccessfulProvider = null;
 
-// ============= BUILD PROMPT =============
+// generate prompt
 function buildPrompt(resumeText, jobDescription) {
   const hasJobDescription =
     jobDescription && jobDescription.trim().length >= 20;
@@ -99,10 +99,10 @@ RULES:
 - If text is not a professional resume, score below 20.`;
 }
 
-// ============= GEMINI ATTEMPT =============
+// gemini attempt
 async function tryGemini(resumeText, jobDescription) {
   if (!genAI) {
-    console.log("⚠️ Gemini not configured (no GEMINI_API_KEY)");
+    console.log("Gemini not configured (no GEMINI_API_KEY)");
     return null;
   }
 
@@ -110,7 +110,7 @@ async function tryGemini(resumeText, jobDescription) {
 
   for (const model of GEMINI_MODELS) {
     try {
-      console.log(`🟡 GEMINI: Trying ${model}...`);
+      console.log(`GEMINI: Trying ${model}...`);
       const genModel = genAI.getGenerativeModel({ model });
       const result = await genModel.generateContent(prompt);
       const response = await result.response;
@@ -124,22 +124,22 @@ async function tryGemini(resumeText, jobDescription) {
       if (match) jsonStr = match[0];
 
       const analysis = JSON.parse(jsonStr);
-      console.log(`✅ GEMINI (${model}): Score=${analysis.score}`);
+      console.log(`GEMINI (${model}): Score=${analysis.score}`);
       lastSuccessfulProvider = "gemini";
       return { analysis, provider: "gemini", model };
     } catch (err) {
-      console.log(`❌ GEMINI ${model}: ${err.message}`);
+      console.log(` GEMINI ${model}: ${err.message}`);
     }
   }
 
-  console.log("❌ All Gemini models failed");
+  console.log(" All Gemini models failed");
   return null;
 }
 
-// ============= GROQ ATTEMPT =============
+// groq attempt
 async function tryGroq(resumeText, jobDescription) {
   if (!groq) {
-    console.log("⚠️ Groq not configured (no GROQ_API_KEY)");
+    console.log("Groq not configured (no GROQ_API_KEY)");
     return null;
   }
 
@@ -147,7 +147,7 @@ async function tryGroq(resumeText, jobDescription) {
 
   for (const model of GROQ_MODELS) {
     try {
-      console.log(`🟡 GROQ: Trying ${model}...`);
+      console.log(`GROQ: Trying ${model}...`);
 
       const completion = await groq.chat.completions.create({
         messages: [
@@ -174,30 +174,31 @@ async function tryGroq(resumeText, jobDescription) {
       if (match) jsonStr = match[0];
 
       const analysis = JSON.parse(jsonStr);
-      console.log(`✅ GROQ (${model}): Score=${analysis.score}`);
+      console.log(`GROQ (${model}): Score=${analysis.score}`);
       lastSuccessfulProvider = "groq";
       return { analysis, provider: "groq", model };
     } catch (err) {
-      console.log(`❌ GROQ ${model}: ${err.message}`);
+      console.log(`GROQ ${model}: ${err.message}`);
     }
   }
 
-  console.log("❌ All Groq models failed");
+  console.log("All Groq models failed");
   return null;
 }
 
-// ============= MAIN ANALYZER =============
+//  main analyzer
+
 const analyzeResumeWithGemini = async (resumeText, jobDescription) => {
   // Validation
   if (!resumeText || resumeText.trim().length < 50) {
-    console.log("⚠️ Resume too short (min 50 chars)");
+    console.log("Resume too short (min 50 chars)");
     return getFallbackAnalysis("resume_too_short");
   }
 
   // Check if any provider is configured
   if (!genAI && !groq) {
     console.error(
-      "❌ No AI provider configured! Set GEMINI_API_KEY or GROQ_API_KEY",
+      "No AI provider configured! Set GEMINI_API_KEY or GROQ_API_KEY",
     );
     return getFallbackAnalysis("no_provider");
   }
@@ -207,16 +208,16 @@ const analyzeResumeWithGemini = async (resumeText, jobDescription) => {
 
   // Try last successful provider first (faster)
   if (lastSuccessfulProvider === "gemini" && genAI) {
-    console.log("🔄 Trying last successful provider: Gemini");
+    console.log("Trying last successful provider: Gemini");
     result = await tryGemini(resumeText, jobDescription);
   } else if (lastSuccessfulProvider === "groq" && groq) {
-    console.log("🔄 Trying last successful provider: Groq");
+    console.log("Trying last successful provider: Groq");
     result = await tryGroq(resumeText, jobDescription);
   }
 
   // If last provider failed, try the other one
   if (!result) {
-    // Try Gemini first (free)
+
     if (genAI) {
       result = await tryGemini(resumeText, jobDescription);
       if (!result) errors.push("Gemini: All models failed");
@@ -224,7 +225,7 @@ const analyzeResumeWithGemini = async (resumeText, jobDescription) => {
 
     // Fallback to Groq (also free)
     if (!result && groq) {
-      console.log("🔄 Falling back to Groq...");
+      console.log("Falling back to Groq...");
       result = await tryGroq(resumeText, jobDescription);
       if (!result) errors.push("Groq: All models failed");
     }
@@ -235,11 +236,12 @@ const analyzeResumeWithGemini = async (resumeText, jobDescription) => {
     return validateAndReturnAnalysis(result.analysis);
   }
 
-  console.error("❌ ALL PROVIDERS FAILED:", errors);
+  console.error("ALL PROVIDERS FAILED:", errors);
   return getFallbackAnalysis("all_failed");
 };
 
-// ============= VALIDATION =============
+
+// validation 
 function clamp(val, min, max, fallback) {
   if (typeof val !== "number" || isNaN(val)) return fallback;
   return Math.max(min, Math.min(max, Math.round(val)));
@@ -367,7 +369,8 @@ function validateAndReturnAnalysis(a) {
   };
 }
 
-// ============= FALLBACK =============
+// fallback analysis
+
 function getFallbackAnalysis(reason) {
   const msgs = {
     resume_too_short:

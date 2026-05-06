@@ -65,7 +65,7 @@ const Features = () => {
         </p>
       </div>
 
-      {/* 🔹 Cards Grid */}
+      {/*Cards Grid */}
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3 px-6 md:px-16">
         {features.map((feature, i) => (
           <div

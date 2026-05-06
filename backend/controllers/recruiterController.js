@@ -32,7 +32,6 @@ exports.getAnalytics = async (req, res) => {
       }
     });
 
-    // 🔥 KEY FIX (IMPORTANT)
     const applicationPerJob = jobs.map(job => {
       const count = applications.filter(app =>
         app.job.toString() === job._id.toString()

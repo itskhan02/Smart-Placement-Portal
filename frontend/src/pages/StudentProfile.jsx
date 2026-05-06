@@ -819,7 +819,7 @@ const StudentProfile = () => {
           </div>
         </div>
 
-        {/* Edit Mode Footer - Save and Cancel Buttons */}
+        {/* Edit Mode  */}
         {isEditing && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm ">
             <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-white">

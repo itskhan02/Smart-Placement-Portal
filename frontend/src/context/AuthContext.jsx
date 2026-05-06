@@ -1,12 +1,4 @@
-/* eslint-disable react-refresh/only-export-components */
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import api, {
   AUTH_SESSION_EXPIRED_EVENT,
   clearStoredSession,
@@ -129,31 +121,28 @@ const AuthProvider = ({ children }) => {
     }
   }, [user?._id]);
 
-  const login = useCallback(
-    async (form) => {
-      try {
-        const res = await api.post("/auth/login", form);
-        const { user: loggedInUser, token: jwtToken } = res.data;
+  const login = useCallback(async (form) => {
+    try {
+      const res = await api.post("/auth/login", form);
+      const { user: loggedInUser, token: jwtToken } = res.data;
 
-        if (!loggedInUser || !jwtToken) {
-          throw new Error("Invalid response from server");
-        }
-
-        const nextSession = saveStoredSession({
-          token: jwtToken,
-          user: loggedInUser,
-        });
-
-        setSession(nextSession);
-        connectSocket(loggedInUser._id);
-
-        return loggedInUser;
-      } catch (err) {
-        throw err.response?.data?.error || err.message || "Login failed";
+      if (!loggedInUser || !jwtToken) {
+        throw new Error("Invalid response from server");
       }
-    },
-    [],
-  );
+
+      const nextSession = saveStoredSession({
+        token: jwtToken,
+        user: loggedInUser,
+      });
+
+      setSession(nextSession);
+      connectSocket(loggedInUser._id);
+
+      return loggedInUser;
+    } catch (err) {
+      throw err.response?.data?.error || err.message || "Login failed";
+    }
+  }, []);
 
   const logout = useCallback(() => {
     clearSession();
@@ -193,16 +182,7 @@ const AuthProvider = ({ children }) => {
       register,
       updateAuthUser,
     }),
-    [
-      expiresAt,
-      loading,
-      login,
-      logout,
-      register,
-      token,
-      updateAuthUser,
-      user,
-    ],
+    [expiresAt, loading, login, logout, register, token, updateAuthUser, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
